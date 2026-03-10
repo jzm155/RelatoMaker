@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Relato</title>
+
+<style>
+:root {
+    --bg-body: #f4f6f8;
+    --bg-container: white;
+    --text-color: #333;
+    --item-bg: #f1f1f1;
+    --border-color: #ccc;
+    --group-bg: #fafafa;
+    --primary-color: #007bff; /* Cor padrão */
+}
+
+body.dark-mode {
+    --bg-body: #121212;
+    --bg-container: #1e1e1e;
+    --text-color: #e0e0e0;
+    --item-bg: #2d2d2d;
+    --border-color: #444;
+    --group-bg: #252525;
+}
+
+body {
+    font-family: Arial;
+    background: var(--bg-body);
+    color: var(--text-color);
+    padding: 40px 20px;
+    margin: 0;
+    transition: 0.3s;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+    background: var(--bg-container);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Controles Superiores */
+.controles-topo {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    z-index: 1000;
+}
+
+#btnNightMode {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: var(--bg-container);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.seletor-cor {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+/* Layout */
+.grupo-adicao {
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    border-radius: 8px;
+    background: var(--group-bg);
+    margin-bottom: 20px;
+}
+
+.grupo-inputs {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.flex-item { flex: 1; }
+
+h2 { margin-top: 0; }
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background: var(--bg-container);
+    color: var(--text-color);
+    box-sizing: border-box;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    transition: filter 0.2s;
+}
+
+button:hover { filter: brightness(0.9); }
+
+.btn-gerar { margin-top: 10px; width: 100%; }
+
+.header-resultado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.btn-copiar {
+    background: #28a745;
+    font-size: 12px;
+    padding: 5px 10px;
+}
+
+.output {
+    margin-top: 10px;
+    background: #111;
+    color: #0f0;
+    padding: 20px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    overflow-x: auto;
+    min-height: 50px;
+}
+
+.item {
+    background: var(--item-bg);
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--primary-color);
+}
+
+@media (max-width: 600px) {
+    .grupo-inputs { flex-direction: column; align-items: stretch; }
+    body { padding: 20px 10px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="controles-topo">
+    <input type="color" id="corTema" class="seletor-cor" title="Escolher cor tema" onchange="mudarCorTema(this.value)">
+    <button id="btnNightMode" onclick="toggleNightMode()" title="Alternar Tema">🌓</button>
+</div>
+
+<div class="container">
+    <h2>Gerador de Relato</h2>
+
+    <label>Data</label>
+    <input type="date" id="data" style="margin-bottom: 15px;">
+
+    <label>Título da Seção</label>
+    <input type="text" id="titulo" placeholder="Ex: Atividades do Dia" style="margin-bottom: 15px;">
+
+    <div class="grupo-adicao">
+        <div class="grupo-inputs">
+            <div class="flex-item">
+                <label>Descrição</label>
+                <input type="text" id="descricao">
+            </div>
+            <div class="flex-item">
+                <label>Subdescrição</label>
+                <input type="text" id="subdescricao">
+            </div>
+            <button onclick="adicionarItem()">Adicionar</button>
+        </div>
+    </div>
+
+    <button onclick="gerarTexto()" class="btn-gerar">Gerar Texto Final</button>
+
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <h3>Itens adicionados</h3>
+        <button onclick="limparTudo()" style="background:none; color:#dc3545; font-size: 12px; text-decoration: underline;">Limpar Tudo</button>
+    </div>
+    
+    <div id="lista"></div>
+
+    <div class="header-resultado">
+        <h3 style="margin:0">Resultado</h3>
+        <button id="btnCopiar" class="btn-copiar" onclick="copiarTexto()">Copiar Texto</button>
+    </div>
+    <div class="output" id="resultado"></div>
+</div>
+
+<script>
+let dados = {}
+
+// Carregar preferências salvas
+window.onload = function() {
+    hoje();
+    
+    const corSalva = localStorage.getItem('temaCor') || '#007bff';
+    mudarCorTema(corSalva);
+    document.getElementById('corTema').value = corSalva;
+
+    if (localStorage.getItem('nightMode') === 'ativo') {
+        document.body.classList.add('dark-mode');
+        document.getElementById("btnNightMode").textContent = "☀️";
+    }
+}
+
+function hoje(){
+    const hoje = new Date()
+    const yyyy = hoje.getFullYear()
+    const mm = String(hoje.getMonth()+1).padStart(2,'0')
+    const dd = String(hoje.getDate()).padStart(2,'0')
+    document.getElementById("data").value = `${yyyy}-${mm}-${dd}`
+}
+
+function mudarCorTema(cor) {
+    document.documentElement.style.setProperty('--primary-color', cor);
+    localStorage.setItem('temaCor', cor);
+}
+
+function toggleNightMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    document.getElementById("btnNightMode").textContent = isDark ? "☀️" : "🌓";
+    localStorage.setItem('nightMode', isDark ? 'ativo' : 'inativo');
+}
+
+function adicionarItem(){
+    let titulo = document.getElementById("titulo").value
+    let descricao = document.getElementById("descricao").value
+    let subdescricao = document.getElementById("subdescricao").value
+
+    if(!titulo || !descricao) return
+
+    if(!dados[titulo]) dados[titulo] = []
+    dados[titulo].push({ descricao, subdescricao })
+
+    renderLista()
+    document.getElementById("descricao").value=""
+    document.getElementById("subdescricao").value=""
+}
+
+function renderLista(){
+    let html=""
+    for(let titulo in dados){
+        html+=`<div class="item"><b>${titulo}</b>`
+        dados[titulo].forEach(i=>{
+            html+=`<div> - ${i.descricao}`
+            if(i.subdescricao) html+=`<div style="margin-left:20px"> - ${i.subdescricao}</div>`
+            html+=`</div>`
+        })
+        html+="</div>"
+    }
+    document.getElementById("lista").innerHTML=html
+}
+
+function gerarTexto(){
+    let data = document.getElementById("data").value
+    if(!data) return;
+    
+    let partes = data.split("-");
+    let dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+    let texto = `**Relato - ${dataFormatada}**\n\n`
+    for(let titulo in dados){
+        texto += `**${titulo}**\n`
+        dados[titulo].forEach(i=>{
+            texto += ` - ${i.descricao}\n`
+            if(i.subdescricao) texto += `   - ${i.subdescricao}\n`
+        })
+        texto+="\n"
+    }
+    document.getElementById("resultado").textContent = texto
+}
+
+function copiarTexto() {
+    const texto = document.getElementById("resultado").textContent;
+    if(!texto) return;
+
+    navigator.clipboard.writeText(texto).then(() => {
+        const btn = document.getElementById("btnCopiar");
+        const originalText = btn.textContent;
+        btn.textContent = "Copiado!";
+        setTimeout(() => { btn.textContent = originalText; }, 2000);
+    });
+}
+
+function limparTudo() {
+    if(confirm("Deseja apagar todos os itens da lista?")) {
+        dados = {};
+        renderLista();
+        document.getElementById("resultado").textContent = "";
+    }
+}
+</script>
+
+</body>
+</html>
