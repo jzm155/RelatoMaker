@@ -13,7 +13,7 @@
     --item-bg: #f1f1f1;
     --border-color: #ccc;
     --group-bg: #fafafa;
-    --primary-color: #007bff; /* Cor padrão */
+    --primary-color: #007bff;
 }
 
 body.dark-mode {
@@ -43,7 +43,6 @@ body {
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-/* Controles Superiores */
 .controles-topo {
     position: fixed;
     top: 15px;
@@ -77,7 +76,6 @@ body {
     overflow: hidden;
 }
 
-/* Layout */
 .grupo-adicao {
     border: 1px solid var(--border-color);
     padding: 15px;
@@ -86,15 +84,25 @@ body {
     margin-bottom: 20px;
 }
 
+.titulo-container {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
 .grupo-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.linha-input {
     display: flex;
     gap: 10px;
     align-items: flex-end;
 }
 
 .flex-item { flex: 1; }
-
-h2 { margin-top: 0; }
 
 input {
     width: 100%;
@@ -120,53 +128,93 @@ button {
 
 button:hover { filter: brightness(0.9); }
 
-.btn-gerar { margin-top: 10px; width: 100%; }
-
-.header-resultado {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 30px;
-}
-
-.btn-copiar {
-    background: #28a745;
-    font-size: 12px;
-    padding: 5px 10px;
-}
-
-.output {
-    margin-top: 10px;
-    background: #111;
-    color: #0f0;
-    padding: 20px;
-    border-radius: 8px;
-    white-space: pre-wrap;
-    font-family: monospace;
-    overflow-x: auto;
-    min-height: 50px;
-}
-
 .item {
     background: var(--item-bg);
-    padding: 10px;
+    padding: 12px;
     border-radius: 6px;
     margin-bottom: 10px;
     border-left: 4px solid var(--primary-color);
 }
 
+/* Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--bg-container);
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    border: 1px solid var(--border-color);
+}
+
+.tag-sub {
+    display: inline-flex;
+    align-items: center;
+    background: var(--primary-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin: 2px;
+}
+
+.tag-sub span { cursor: pointer; margin-left: 5px; }
+
+.btn-acoes {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-delete { background: #dc3545; padding: 4px 8px; font-size: 12px; }
+.btn-edit { background: #6c757d; padding: 4px 8px; font-size: 12px; }
+
+.output {
+    margin-top: 10px;
+    background: #111;
+    color: #0f0;
+    padding: 15px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    min-height: 50px;
+}
+
 @media (max-width: 600px) {
-    .grupo-inputs { flex-direction: column; align-items: stretch; }
-    body { padding: 20px 10px; }
+    .linha-input { flex-direction: column; align-items: stretch; }
 }
 </style>
 </head>
 
 <body>
 
+<div class="modal-overlay" id="modalEdicao">
+    <div class="modal-content">
+        <h3 style="margin-top:0">Editar Item</h3>
+        <label>Descrição Principal</label>
+        <input type="text" id="editDesc">
+        <div style="margin-top:15px">
+            <label>Subdescrições (separadas por vírgula)</label>
+            <input type="text" id="editSubs">
+        </div>
+        <div style="display:flex; gap:10px; margin-top:20px">
+            <button style="background:#6c757d; flex:1" onclick="fecharModal()">Cancelar</button>
+            <button style="flex:2" id="btnSalvarModal">Salvar</button>
+        </div>
+    </div>
+</div>
+
 <div class="controles-topo">
-    <input type="color" id="corTema" class="seletor-cor" title="Escolher cor tema" onchange="mudarCorTema(this.value)">
-    <button id="btnNightMode" onclick="toggleNightMode()" title="Alternar Tema">🌓</button>
+    <input type="color" id="corTema" class="seletor-cor" onchange="mudarCorTema(this.value)">
+    <button id="btnNightMode" onclick="toggleNightMode()">🌓</button>
 </div>
 
 <div class="container">
@@ -175,142 +223,161 @@ button:hover { filter: brightness(0.9); }
     <label>Data</label>
     <input type="date" id="data" style="margin-bottom: 15px;">
 
-    <label>Título da Seção</label>
-    <input type="text" id="titulo" placeholder="Ex: Atividades do Dia" style="margin-bottom: 15px;">
-
     <div class="grupo-adicao">
+        <div class="titulo-container">
+            <label>Título da Seção</label>
+            <input type="text" id="titulo" placeholder="Ex: Atividades do Dia">
+        </div>
+
         <div class="grupo-inputs">
-            <div class="flex-item">
-                <label>Descrição</label>
-                <input type="text" id="descricao">
+            <div class="linha-input">
+                <div class="flex-item">
+                    <label>Descrição</label>
+                    <input type="text" id="descricao">
+                </div>
             </div>
-            <div class="flex-item">
-                <label>Subdescrição</label>
-                <input type="text" id="subdescricao">
+            <div class="linha-input">
+                <div class="flex-item">
+                    <label>Sub descrição</label>
+                    <input type="text" id="subInput" placeholder="Enter para adicionar">
+                </div>
+                <button type="button" onclick="addTag()">+</button>
             </div>
-            <button onclick="adicionarItem()">Adicionar</button>
+            <div id="containerTags"></div>
+            <button onclick="adicionarItem()" style="width:100%; margin-top:10px">Adicionar à Lista</button>
         </div>
     </div>
 
-    <button onclick="gerarTexto()" class="btn-gerar">Gerar Texto Final</button>
-
-    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+    <div style="margin-top:20px">
         <h3>Itens adicionados</h3>
-        <button onclick="limparTudo()" style="background:none; color:#dc3545; font-size: 12px; text-decoration: underline;">Limpar Tudo</button>
+        <div id="lista"></div>
     </div>
-    
-    <div id="lista"></div>
 
-    <div class="header-resultado">
+    <button onclick="gerarTexto()" style="width:100%; margin: 20px 0;">Gerar Texto Final</button>
+
+    <div style="margin-top:30px; display:flex; justify-content: space-between; align-items:center">
         <h3 style="margin:0">Resultado</h3>
-        <button id="btnCopiar" class="btn-copiar" onclick="copiarTexto()">Copiar Texto</button>
+        <button onclick="copiarTexto()" style="font-size:12px">Copiar</button>
     </div>
     <div class="output" id="resultado"></div>
 </div>
 
 <script>
-let dados = {}
+let dados = {};
+let subdescricoesTemporarias = [];
+let editandoInfo = { titulo: "", index: -1 };
 
-// Carregar preferências salvas
-window.onload = function() {
-    hoje();
-    
-    const corSalva = localStorage.getItem('temaCor') || '#007bff';
-    mudarCorTema(corSalva);
-    document.getElementById('corTema').value = corSalva;
+document.getElementById('subInput').addEventListener('keydown', e => { if(e.key === 'Enter') { e.preventDefault(); addTag(); }});
 
-    if (localStorage.getItem('nightMode') === 'ativo') {
-        document.body.classList.add('dark-mode');
-        document.getElementById("btnNightMode").textContent = "☀️";
+function addTag() {
+    let val = document.getElementById('subInput').value.trim();
+    if (val) { subdescricoesTemporarias.push(val); renderTags(); }
+    document.getElementById('subInput').value = "";
+}
+
+function renderTags() {
+    document.getElementById('containerTags').innerHTML = subdescricoesTemporarias.map((s, i) => 
+        `<span class="tag-sub">${s} <span onclick="removeTag(${i})">&times;</span></span>`
+    ).join('');
+}
+
+function removeTag(i) { subdescricoesTemporarias.splice(i, 1); renderTags(); }
+
+function adicionarItem() {
+    let titulo = document.getElementById("titulo").value;
+    let descricao = document.getElementById("descricao").value;
+    if (!titulo || !descricao) return;
+    if (!dados[titulo]) dados[titulo] = [];
+    dados[titulo].push({ descricao, subdescricoes: [...subdescricoesTemporarias] });
+    subdescricoesTemporarias = [];
+    renderTags();
+    document.getElementById("descricao").value = "";
+    renderLista();
+}
+
+function excluirItem(titulo, index) {
+    if(confirm("Excluir este item?")) {
+        dados[titulo].splice(index, 1);
+        if(dados[titulo].length === 0) delete dados[titulo];
+        renderLista();
     }
 }
 
-function hoje(){
-    const hoje = new Date()
-    const yyyy = hoje.getFullYear()
-    const mm = String(hoje.getMonth()+1).padStart(2,'0')
-    const dd = String(hoje.getDate()).padStart(2,'0')
-    document.getElementById("data").value = `${yyyy}-${mm}-${dd}`
-}
-
-function mudarCorTema(cor) {
-    document.documentElement.style.setProperty('--primary-color', cor);
-    localStorage.setItem('temaCor', cor);
-}
-
-function toggleNightMode() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    document.getElementById("btnNightMode").textContent = isDark ? "☀️" : "🌓";
-    localStorage.setItem('nightMode', isDark ? 'ativo' : 'inativo');
-}
-
-function adicionarItem(){
-    let titulo = document.getElementById("titulo").value
-    let descricao = document.getElementById("descricao").value
-    let subdescricao = document.getElementById("subdescricao").value
-
-    if(!titulo || !descricao) return
-
-    if(!dados[titulo]) dados[titulo] = []
-    dados[titulo].push({ descricao, subdescricao })
-
-    renderLista()
-    document.getElementById("descricao").value=""
-    document.getElementById("subdescricao").value=""
-}
-
-function renderLista(){
-    let html=""
-    for(let titulo in dados){
-        html+=`<div class="item"><b>${titulo}</b>`
-        dados[titulo].forEach(i=>{
-            html+=`<div> - ${i.descricao}`
-            if(i.subdescricao) html+=`<div style="margin-left:20px"> - ${i.subdescricao}</div>`
-            html+=`</div>`
-        })
-        html+="</div>"
+function renderLista() {
+    let html = "";
+    for (let titulo in dados) {
+        html += `<div class="item"><b>${titulo}</b>`;
+        dados[titulo].forEach((i, index) => {
+            html += `<div style="margin-top:8px; display:flex; justify-content:space-between; align-items:flex-start">
+                <div style="flex:1">
+                    - ${i.descricao}
+                    ${i.subdescricoes.map(s => `<div style="margin-left:20px; font-size:0.9em; opacity:0.8">↳ ${s}</div>`).join('')}
+                </div>
+                <div class="btn-acoes">
+                    <button class="btn-edit" onclick="abrirModal('${titulo}', ${index})">✎</button>
+                    <button class="btn-delete" onclick="excluirItem('${titulo}', ${index})">🗑</button>
+                </div>
+            </div>`;
+        });
+        html += `</div>`;
     }
-    document.getElementById("lista").innerHTML=html
+    document.getElementById("lista").innerHTML = html;
 }
 
-function gerarTexto(){
-    let data = document.getElementById("data").value
-    if(!data) return;
-    
-    let partes = data.split("-");
-    let dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+function abrirModal(titulo, index) {
+    editandoInfo = { titulo, index };
+    const item = dados[titulo][index];
+    document.getElementById("editDesc").value = item.descricao;
+    document.getElementById("editSubs").value = item.subdescricoes.join(', ');
+    document.getElementById("modalEdicao").style.display = "flex";
+    document.getElementById("btnSalvarModal").onclick = salvarEdicao;
+}
 
-    let texto = `**Relato - ${dataFormatada}**\n\n`
-    for(let titulo in dados){
-        texto += `**${titulo}**\n`
-        dados[titulo].forEach(i=>{
-            texto += ` - ${i.descricao}\n`
-            if(i.subdescricao) texto += `   - ${i.subdescricao}\n`
-        })
-        texto+="\n"
+function fecharModal() { document.getElementById("modalEdicao").style.display = "none"; }
+
+function salvarEdicao() {
+    const d = document.getElementById("editDesc").value;
+    const s = document.getElementById("editSubs").value;
+    if (d) {
+        dados[editandoInfo.titulo][editandoInfo.index].descricao = d;
+        dados[editandoInfo.titulo][editandoInfo.index].subdescricoes = s.split(',').map(x => x.trim()).filter(x => x);
+        renderLista();
+        fecharModal();
     }
-    document.getElementById("resultado").textContent = texto
 }
 
-function copiarTexto() {
+function gerarTexto() {
+    let data = document.getElementById("data").value;
+    if (!data) return;
+    let p = data.split("-");
+    let texto = `**Relato - ${p[2]}/${p[1]}/${p[0]}**\n\n`;
+    for (let t in dados) {
+        texto += `**${t}**\n`;
+        dados[t].forEach(i => {
+            texto += ` - ${i.descricao}\n`;
+            i.subdescricoes.forEach(s => texto += `   - ${s}\n`);
+        });
+        texto += "\n";
+    }
+    document.getElementById("resultado").textContent = texto;
+}
+
+function mudarCorTema(c) { document.documentElement.style.setProperty('--primary-color', c); localStorage.setItem('temaCor', c); }
+function toggleNightMode() { 
+    document.body.classList.toggle('dark-mode'); 
+    localStorage.setItem('nightMode', document.body.classList.contains('dark-mode') ? 'ativo' : 'inativo'); 
+}
+function hoje(){ document.getElementById("data").value = new Date().toISOString().split('T')[0]; }
+function copiarTexto() { 
     const texto = document.getElementById("resultado").textContent;
     if(!texto) return;
-
-    navigator.clipboard.writeText(texto).then(() => {
-        const btn = document.getElementById("btnCopiar");
-        const originalText = btn.textContent;
-        btn.textContent = "Copiado!";
-        setTimeout(() => { btn.textContent = originalText; }, 2000);
-    });
+    navigator.clipboard.writeText(texto);
+    alert("Copiado!");
 }
-
-function limparTudo() {
-    if(confirm("Deseja apagar todos os itens da lista?")) {
-        dados = {};
-        renderLista();
-        document.getElementById("resultado").textContent = "";
-    }
+window.onload = function() { 
+    hoje(); 
+    mudarCorTema(localStorage.getItem('temaCor') || '#007bff'); 
+    if(localStorage.getItem('nightMode') === 'ativo') document.body.classList.add('dark-mode');
 }
 </script>
 
