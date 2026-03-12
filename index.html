@@ -367,7 +367,9 @@ function toggleNightMode() {
     document.body.classList.toggle('dark-mode'); 
     localStorage.setItem('nightMode', document.body.classList.contains('dark-mode') ? 'ativo' : 'inativo'); 
 }
-function hoje(){ document.getElementById("data").value = new Date().toISOString().split('T')[0]; }
+function hoje(){ document.getElementById("data").value = new Date().toLocaleDateString('sv-SE', {
+  timeZone: 'America/Sao_Paulo'
+}); }
 function copiarTexto() { 
     const texto = document.getElementById("resultado").textContent;
     if(!texto) return;
