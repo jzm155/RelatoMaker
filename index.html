@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerador de Relato</title>
+<title>Gerador de Relato Pro - Reordenável</title>
 
 <style>
 :root {
@@ -26,7 +26,7 @@ body.dark-mode {
 }
 
 body {
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     background: var(--bg-body);
     color: var(--text-color);
     padding: 40px 20px;
@@ -88,21 +88,8 @@ body {
     margin-bottom: 15px;
     padding-bottom: 15px;
     border-bottom: 1px dashed var(--border-color);
+    position: relative; /* Adicionado para posicionar o painel */
 }
-
-.grupo-inputs {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.linha-input {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-}
-
-.flex-item { flex: 1; }
 
 input {
     width: 100%;
@@ -114,6 +101,52 @@ input {
     color: var(--text-color);
     box-sizing: border-box;
 }
+
+/* --- Ajuste para o botão de emoji no campo --- */
+.input-emoji-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+#titulo { padding-right: 40px; }
+.btn-emoji-open {
+    position: absolute;
+    right: 5px;
+    top: 55%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    padding: 0;
+    z-index: 5;
+}
+.painel-emotes {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 280px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--bg-container);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    z-index: 2000;
+    padding: 10px;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 5px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.painel-emotes span {
+    cursor: pointer;
+    font-size: 20px;
+    text-align: center;
+    padding: 3px;
+    border-radius: 4px;
+}
+.painel-emotes span:hover { background: rgba(0,0,0,0.1); }
+/* --------------------------------------------- */
 
 button {
     padding: 10px 15px;
@@ -128,15 +161,49 @@ button {
 
 button:hover { filter: brightness(0.9); }
 
-.item {
+/* Estilos de Drag and Drop */
+.item-bloco {
     background: var(--item-bg);
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 10px;
-    border-left: 4px solid var(--primary-color);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 5px solid var(--primary-color);
+    position: relative;
+    transition: transform 0.2s, background 0.2s;
 }
 
-/* Modal */
+.titulo-bloco-drag {
+    cursor: move;
+    display: block;
+    padding: 5px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 1px;
+}
+
+.linha-reordenavel {
+    background: var(--bg-container);
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: grab;
+    border: 1px solid transparent;
+}
+
+.linha-reordenavel:hover { border-color: var(--primary-color); }
+
+.drag-over-bloco {
+    background: rgba(0, 123, 255, 0.15) !important;
+    outline: 2px dashed var(--primary-color);
+}
+
+/* Modais e Output */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -153,7 +220,6 @@ button:hover { filter: brightness(0.9); }
     border-radius: 12px;
     width: 90%;
     max-width: 500px;
-    border: 1px solid var(--border-color);
 }
 
 .tag-sub {
@@ -167,13 +233,7 @@ button:hover { filter: brightness(0.9); }
     margin: 2px;
 }
 
-.tag-sub span { cursor: pointer; margin-left: 5px; }
-
-.btn-acoes {
-    display: flex;
-    gap: 5px;
-}
-
+.btn-acoes { display: flex; gap: 5px; }
 .btn-delete { background: #dc3545; padding: 4px 8px; font-size: 12px; }
 .btn-edit { background: #6c757d; padding: 4px 8px; font-size: 12px; }
 
@@ -185,11 +245,6 @@ button:hover { filter: brightness(0.9); }
     border-radius: 8px;
     white-space: pre-wrap;
     font-family: monospace;
-    min-height: 50px;
-}
-
-@media (max-width: 600px) {
-    .linha-input { flex-direction: column; align-items: stretch; }
 }
 </style>
 </head>
@@ -198,13 +253,9 @@ button:hover { filter: brightness(0.9); }
 
 <div class="modal-overlay" id="modalEdicao">
     <div class="modal-content">
-        <h3 style="margin-top:0">Editar Item</h3>
-        <label>Descrição Principal</label>
-        <input type="text" id="editDesc">
-        <div style="margin-top:15px">
-            <label>Subdescrições (separadas por vírgula)</label>
-            <input type="text" id="editSubs">
-        </div>
+        <h3>Editar Item</h3>
+        <input type="text" id="editDesc" placeholder="Descrição">
+        <input type="text" id="editSubs" placeholder="Subdescrições (vírgula)" style="margin-top:10px">
         <div style="display:flex; gap:10px; margin-top:20px">
             <button style="background:#6c757d; flex:1" onclick="fecharModal()">Cancelar</button>
             <button style="flex:2" id="btnSalvarModal">Salvar</button>
@@ -220,54 +271,76 @@ button:hover { filter: brightness(0.9); }
 <div class="container">
     <h2>Gerador de Relato</h2>
 
-    <label>Data</label>
-    <input type="date" id="data" style="margin-bottom: 15px;">
+    <input type="date" id="data" style="margin-bottom: 20px;">
 
     <div class="grupo-adicao">
         <div class="titulo-container">
             <label>Título da Seção</label>
-            <input type="text" id="titulo" placeholder="Ex: Atividades do Dia">
-        </div>
-
-        <div class="grupo-inputs">
-            <div class="linha-input">
-                <div class="flex-item">
-                    <label>Descrição</label>
-                    <input type="text" id="descricao">
-                </div>
+            <div class="input-emoji-wrapper">
+                <input type="text" id="titulo" placeholder="Ex: Atividades do Dia">
+                <button type="button" class="btn-emoji-open" onclick="toggleEmotes()">😀</button>
+                <div id="painelEmotes" class="painel-emotes"></div>
             </div>
-            <div class="linha-input">
-                <div class="flex-item">
-                    <label>Sub descrição</label>
-                    <input type="text" id="subInput" placeholder="Enter para adicionar">
-                </div>
-                <button type="button" onclick="addTag()">+</button>
-            </div>
-            <div id="containerTags"></div>
-            <button onclick="adicionarItem()" style="width:100%; margin-top:10px">Adicionar à Lista</button>
         </div>
+        <div class="flex-item">
+            <label>Descrição</label>
+            <input type="text" id="descricao">
+        </div>
+        <div style="display:flex; gap:10px; margin-top:10px">
+            <input type="text" id="subInput" placeholder="Sub descrição (Enter)">
+            <button type="button" onclick="addTag()">+</button>
+        </div>
+        <div id="containerTags" style="margin-top:10px"></div>
+        <button onclick="adicionarItem()" style="width:100%; margin-top:15px">Adicionar à Lista</button>
     </div>
 
     <div style="margin-top:20px">
-        <h3>Itens adicionados</h3>
+        <h3>Estrutura do Relato</h3>
+        <p style="font-size: 0.8em; opacity: 0.7;">• Arraste o <b>título cinza</b> para mover o bloco todo.<br>• Arraste o <b>item branco</b> para mover entre seções.</p>
         <div id="lista"></div>
     </div>
 
     <button onclick="gerarTexto()" style="width:100%; margin: 20px 0;">Gerar Texto Final</button>
-
-    <div style="margin-top:30px; display:flex; justify-content: space-between; align-items:center">
-        <h3 style="margin:0">Resultado</h3>
-        <button onclick="copiarTexto()" style="font-size:12px">Copiar</button>
+    <div style="display:flex; justify-content: space-between; align-items:center">
+        <h3>Resultado</h3>
+        <button onclick="copiarTexto()">Copiar</button>
     </div>
     <div class="output" id="resultado"></div>
 </div>
 
 <script>
-let dados = {};
+let dados = new Map();
 let subdescricoesTemporarias = [];
 let editandoInfo = { titulo: "", index: -1 };
+let dragSource = null;
 
-document.getElementById('subInput').addEventListener('keydown', e => { if(e.key === 'Enter') { e.preventDefault(); addTag(); }});
+const emojis = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","😉","😍","😘","😗","😙","😚","😋","😛","😜","😝","🤑","🤗","🤔","🤐","😐","😑","😶","😏","😒","🙄","😬","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥶","🥵","😵","🤯","🤠","🥳","😎","🤓","🧐","😕","😟","☹️","🙁","😮","😯","😲","😳","🥺","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","🤡","💩","👻","👽","🤖","👍","👎","👏","🙏","💪","❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","💯","🔥","✨","⭐","💥","❄️","⚡","🌞"];
+
+// Gerar painel de emojis
+const painel = document.getElementById('painelEmotes');
+emojis.forEach(e => {
+    const span = document.createElement('span');
+    span.textContent = e;
+    span.onclick = () => {
+        const input = document.getElementById('titulo');
+        input.value += e;
+        input.focus();
+    };
+    painel.appendChild(span);
+});
+
+function toggleEmotes() {
+    painel.style.display = painel.style.display === 'grid' ? 'none' : 'grid';
+}
+
+// Fechar emotes ao clicar fora
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.input-emoji-wrapper')) painel.style.display = 'none';
+});
+
+document.getElementById('subInput').addEventListener('keydown', e => { 
+    if(e.key === 'Enter') { e.preventDefault(); addTag(); }
+});
 
 function addTag() {
     let val = document.getElementById('subInput').value.trim();
@@ -277,56 +350,109 @@ function addTag() {
 
 function renderTags() {
     document.getElementById('containerTags').innerHTML = subdescricoesTemporarias.map((s, i) => 
-        `<span class="tag-sub">${s} <span onclick="removeTag(${i})">&times;</span></span>`
+        `<span class="tag-sub">${s} <span onclick="removeTag(${i})" style="cursor:pointer">&times;</span></span>`
     ).join('');
 }
 
 function removeTag(i) { subdescricoesTemporarias.splice(i, 1); renderTags(); }
 
 function adicionarItem() {
-    let titulo = document.getElementById("titulo").value;
-    let descricao = document.getElementById("descricao").value;
+    let titulo = document.getElementById("titulo").value.trim();
+    let descricao = document.getElementById("descricao").value.trim();
     if (!titulo || !descricao) return;
-    if (!dados[titulo]) dados[titulo] = [];
-    dados[titulo].push({ descricao, subdescricoes: [...subdescricoesTemporarias] });
+    
+    if (!dados.has(titulo)) dados.set(titulo, []);
+    dados.get(titulo).push({ descricao, subdescricoes: [...subdescricoesTemporarias] });
+    
     subdescricoesTemporarias = [];
     renderTags();
     document.getElementById("descricao").value = "";
     renderLista();
 }
 
+function renderLista() {
+    let html = "";
+    dados.forEach((itens, titulo) => {
+        html += `
+        <div class="item-bloco" 
+             ondragover="handleDragOver(event)" 
+             ondragleave="handleDragLeave(event)"
+             ondrop="handleDrop(event, '${titulo}')">
+            
+            <span class="titulo-bloco-drag" draggable="true" ondragstart="dragBloco(event, '${titulo}')">
+                ⣿ ${titulo} (Mover Bloco)
+            </span>
+            
+            ${itens.map((i, index) => `
+                <div class="linha-reordenavel" draggable="true" ondragstart="dragItem(event, '${titulo}', ${index})">
+                    <div style="pointer-events:none">
+                        - ${i.descricao}
+                        ${i.subdescricoes.map(s => `<div style="margin-left:20px; font-size:0.85em; opacity:0.7">↳ ${s}</div>`).join('')}
+                    </div>
+                    <div class="btn-acoes">
+                        <button class="btn-edit" onclick="abrirModal('${titulo}', ${index})">✎</button>
+                        <button class="btn-delete" onclick="excluirItem('${titulo}', ${index})">🗑</button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>`;
+    });
+    document.getElementById("lista").innerHTML = html || "<p style='opacity:0.5'>Adicione itens acima...</p>";
+}
+
+function dragItem(ev, titulo, index) {
+    dragSource = { tipo: 'item', titulo, index };
+    ev.dataTransfer.setData("text/plain", "");
+}
+
+function dragBloco(ev, titulo) {
+    dragSource = { tipo: 'bloco', titulo, index: null };
+    ev.dataTransfer.setData("text/plain", "");
+}
+
+function handleDragOver(ev) {
+    ev.preventDefault();
+    ev.currentTarget.classList.add('drag-over-bloco');
+}
+
+function handleDragLeave(ev) {
+    ev.currentTarget.classList.remove('drag-over-bloco');
+}
+
+function handleDrop(ev, tituloDestino) {
+    ev.preventDefault();
+    ev.currentTarget.classList.remove('drag-over-bloco');
+    if (!dragSource) return;
+
+    if (dragSource.tipo === 'item') {
+        const item = dados.get(dragSource.titulo).splice(dragSource.index, 1)[0];
+        if (dados.get(dragSource.titulo).length === 0) dados.delete(dragSource.titulo);
+        if (!dados.has(tituloDestino)) dados.set(tituloDestino, []);
+        dados.get(tituloDestino).push(item);
+    } 
+    else if (dragSource.tipo === 'bloco') {
+        const entries = Array.from(dados.entries());
+        const idxOrigem = entries.findIndex(e => e[0] === dragSource.titulo);
+        const idxDestino = entries.findIndex(e => e[0] === tituloDestino);
+        const [removido] = entries.splice(idxOrigem, 1);
+        entries.splice(idxDestino, 0, removido);
+        dados = new Map(entries);
+    }
+    dragSource = null;
+    renderLista();
+}
+
 function excluirItem(titulo, index) {
-    if(confirm("Excluir este item?")) {
-        dados[titulo].splice(index, 1);
-        if(dados[titulo].length === 0) delete dados[titulo];
+    if(confirm("Excluir?")) {
+        dados.get(titulo).splice(index, 1);
+        if(dados.get(titulo).length === 0) dados.delete(titulo);
         renderLista();
     }
 }
 
-function renderLista() {
-    let html = "";
-    for (let titulo in dados) {
-        html += `<div class="item"><b>${titulo}</b>`;
-        dados[titulo].forEach((i, index) => {
-            html += `<div style="margin-top:8px; display:flex; justify-content:space-between; align-items:flex-start">
-                <div style="flex:1">
-                    - ${i.descricao}
-                    ${i.subdescricoes.map(s => `<div style="margin-left:20px; font-size:0.9em; opacity:0.8">↳ ${s}</div>`).join('')}
-                </div>
-                <div class="btn-acoes">
-                    <button class="btn-edit" onclick="abrirModal('${titulo}', ${index})">✎</button>
-                    <button class="btn-delete" onclick="excluirItem('${titulo}', ${index})">🗑</button>
-                </div>
-            </div>`;
-        });
-        html += `</div>`;
-    }
-    document.getElementById("lista").innerHTML = html;
-}
-
 function abrirModal(titulo, index) {
     editandoInfo = { titulo, index };
-    const item = dados[titulo][index];
+    const item = dados.get(titulo)[index];
     document.getElementById("editDesc").value = item.descricao;
     document.getElementById("editSubs").value = item.subdescricoes.join(', ');
     document.getElementById("modalEdicao").style.display = "flex";
@@ -339,49 +465,50 @@ function salvarEdicao() {
     const d = document.getElementById("editDesc").value;
     const s = document.getElementById("editSubs").value;
     if (d) {
-        dados[editandoInfo.titulo][editandoInfo.index].descricao = d;
-        dados[editandoInfo.titulo][editandoInfo.index].subdescricoes = s.split(',').map(x => x.trim()).filter(x => x);
+        let item = dados.get(editandoInfo.titulo)[editandoInfo.index];
+        item.descricao = d;
+        item.subdescricoes = s.split(',').map(x => x.trim()).filter(x => x);
         renderLista();
         fecharModal();
     }
 }
 
 function gerarTexto() {
-    let data = document.getElementById("data").value;
-    if (!data) return;
-    let p = data.split("-");
+    let dataVal = document.getElementById("data").value;
+    if (!dataVal) return alert("Selecione a data");
+    let p = dataVal.split("-");
     let texto = `**Relato - ${p[2]}/${p[1]}/${p[0]}**\n\n`;
-    for (let t in dados) {
-        texto += `**${t}**\n`;
-        dados[t].forEach(i => {
+    dados.forEach((itens, titulo) => {
+        texto += `**${titulo}**\n`;
+        itens.forEach(i => {
             texto += ` - ${i.descricao}\n`;
             i.subdescricoes.forEach(s => texto += `   - ${s}\n`);
         });
         texto += "\n";
-    }
+    });
     document.getElementById("resultado").textContent = texto;
 }
 
-function mudarCorTema(c) { document.documentElement.style.setProperty('--primary-color', c); localStorage.setItem('temaCor', c); }
+function mudarCorTema(c) { 
+    document.documentElement.style.setProperty('--primary-color', c);
+    localStorage.setItem('temaCor', c); 
+}
+
 function toggleNightMode() { 
     document.body.classList.toggle('dark-mode'); 
     localStorage.setItem('nightMode', document.body.classList.contains('dark-mode') ? 'ativo' : 'inativo'); 
 }
-function hoje(){ document.getElementById("data").value = new Date().toLocaleDateString('sv-SE', {
-  timeZone: 'America/Sao_Paulo'
-}); }
+
 function copiarTexto() { 
-    const texto = document.getElementById("resultado").textContent;
-    if(!texto) return;
-    navigator.clipboard.writeText(texto);
+    navigator.clipboard.writeText(document.getElementById("resultado").textContent);
     alert("Copiado!");
 }
+
 window.onload = function() { 
-    hoje(); 
+    document.getElementById("data").value = new Date().toLocaleDateString('sv-SE', {timeZone: 'America/Sao_Paulo'}); 
     mudarCorTema(localStorage.getItem('temaCor') || '#007bff'); 
     if(localStorage.getItem('nightMode') === 'ativo') document.body.classList.add('dark-mode');
 }
 </script>
-
 </body>
 </html>
