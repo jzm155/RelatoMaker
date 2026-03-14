@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerador de Relato Pro - Reordenável</title>
+<title>Gerador de Relato Pro - V3</title>
 
 <style>
 :root {
@@ -88,7 +88,7 @@ body {
     margin-bottom: 15px;
     padding-bottom: 15px;
     border-bottom: 1px dashed var(--border-color);
-    position: relative; /* Adicionado para posicionar o painel */
+    position: relative;
 }
 
 input {
@@ -102,7 +102,6 @@ input {
     box-sizing: border-box;
 }
 
-/* --- Ajuste para o botão de emoji no campo --- */
 .input-emoji-wrapper {
     position: relative;
     display: flex;
@@ -146,7 +145,6 @@ input {
     border-radius: 4px;
 }
 .painel-emotes span:hover { background: rgba(0,0,0,0.1); }
-/* --------------------------------------------- */
 
 button {
     padding: 10px 15px;
@@ -161,7 +159,6 @@ button {
 
 button:hover { filter: brightness(0.9); }
 
-/* Estilos de Drag and Drop */
 .item-bloco {
     background: var(--item-bg);
     padding: 15px;
@@ -169,19 +166,34 @@ button:hover { filter: brightness(0.9); }
     margin-bottom: 20px;
     border-left: 5px solid var(--primary-color);
     position: relative;
-    transition: transform 0.2s, background 0.2s;
 }
 
-.titulo-bloco-drag {
-    cursor: move;
-    display: block;
-    padding: 5px;
+.cabecalho-bloco {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     background: rgba(0,0,0,0.05);
+    padding: 8px;
     border-radius: 4px;
     margin-bottom: 10px;
+}
+
+.titulo-texto {
     text-transform: uppercase;
     font-size: 0.85em;
+    font-weight: bold;
     letter-spacing: 1px;
+}
+
+.controles-ordem-bloco {
+    display: flex;
+    gap: 4px;
+}
+
+.btn-ordem {
+    background: #6c757d;
+    padding: 2px 8px;
+    font-size: 14px;
 }
 
 .linha-reordenavel {
@@ -196,14 +208,11 @@ button:hover { filter: brightness(0.9); }
     border: 1px solid transparent;
 }
 
-.linha-reordenavel:hover { border-color: var(--primary-color); }
-
 .drag-over-bloco {
     background: rgba(0, 123, 255, 0.15) !important;
     outline: 2px dashed var(--primary-color);
 }
 
-/* Modais e Output */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -282,7 +291,7 @@ button:hover { filter: brightness(0.9); }
                 <div id="painelEmotes" class="painel-emotes"></div>
             </div>
         </div>
-        <div class="flex-item">
+        <div>
             <label>Descrição</label>
             <input type="text" id="descricao">
         </div>
@@ -296,7 +305,7 @@ button:hover { filter: brightness(0.9); }
 
     <div style="margin-top:20px">
         <h3>Estrutura do Relato</h3>
-        <p style="font-size: 0.8em; opacity: 0.7;">• Arraste o <b>título cinza</b> para mover o bloco todo.<br>• Arraste o <b>item branco</b> para mover entre seções.</p>
+        <p style="font-size: 0.8em; opacity: 0.7;">• Use as setas para mover seções.<br>• Arraste os itens para mover entre seções.</p>
         <div id="lista"></div>
     </div>
 
@@ -311,12 +320,11 @@ button:hover { filter: brightness(0.9); }
 <script>
 let dados = new Map();
 let subdescricoesTemporarias = [];
-let editandoInfo = { titulo: "", index: -1 };
 let dragSource = null;
 
-const emojis = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","😉","😍","😘","😗","😙","😚","😋","😛","😜","😝","🤑","🤗","🤔","🤐","😐","😑","😶","😏","😒","🙄","😬","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥶","🥵","😵","🤯","🤠","🥳","😎","🤓","🧐","😕","😟","☹️","🙁","😮","😯","😲","😳","🥺","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","🤡","💩","👻","👽","🤖","👍","👎","👏","🙏","💪","❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","💯","🔥","✨","⭐","💥","❄️","⚡","🌞"];
+// Emojis atualizados com tomate, carros, cookie e enfermeira
+const emojis = ["🍅","🏎️","🚙","🍪","👩‍⚕️","🌊","🥬","💸","💰","😀","😃","😄","😁","😆","😅","😂","🤣","😊","😉","😍","😘","😋","🤔","🤫","😐","🙄","😬","😔","😴","😎","🤓","🧐","😮","🥺","😢","😭","😱","😡","🤡","💩","👻","👍","👎","👏","🙏","💪","❤️","🔥","✨","⭐","⚡"];
 
-// Gerar painel de emojis
 const painel = document.getElementById('painelEmotes');
 emojis.forEach(e => {
     const span = document.createElement('span');
@@ -333,7 +341,6 @@ function toggleEmotes() {
     painel.style.display = painel.style.display === 'grid' ? 'none' : 'grid';
 }
 
-// Fechar emotes ao clicar fora
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.input-emoji-wrapper')) painel.style.display = 'none';
 });
@@ -370,18 +377,38 @@ function adicionarItem() {
     renderLista();
 }
 
+function moverBloco(titulo, direcao) {
+    const entries = Array.from(dados.entries());
+    const index = entries.findIndex(e => e[0] === titulo);
+    const novoIndex = index + direcao;
+
+    if (novoIndex >= 0 && novoIndex < entries.length) {
+        const temp = entries[index];
+        entries[index] = entries[novoIndex];
+        entries[novoIndex] = temp;
+        dados = new Map(entries);
+        renderLista();
+    }
+}
+
 function renderLista() {
     let html = "";
-    dados.forEach((itens, titulo) => {
+    const entries = Array.from(dados.entries());
+    
+    entries.forEach(([titulo, itens], idx) => {
         html += `
         <div class="item-bloco" 
              ondragover="handleDragOver(event)" 
              ondragleave="handleDragLeave(event)"
              ondrop="handleDrop(event, '${titulo}')">
             
-            <span class="titulo-bloco-drag" draggable="true" ondragstart="dragBloco(event, '${titulo}')">
-                ⣿ ${titulo} (Mover Bloco)
-            </span>
+            <div class="cabecalho-bloco">
+                <span class="titulo-texto">${titulo}</span>
+                <div class="controles-ordem-bloco">
+                    <button class="btn-ordem" onclick="moverBloco('${titulo}', -1)" ${idx === 0 ? 'disabled style="opacity:0.3"' : ''}>▲</button>
+                    <button class="btn-ordem" onclick="moverBloco('${titulo}', 1)" ${idx === entries.length - 1 ? 'disabled style="opacity:0.3"' : ''}>▼</button>
+                </div>
+            </div>
             
             ${itens.map((i, index) => `
                 <div class="linha-reordenavel" draggable="true" ondragstart="dragItem(event, '${titulo}', ${index})">
@@ -400,50 +427,27 @@ function renderLista() {
     document.getElementById("lista").innerHTML = html || "<p style='opacity:0.5'>Adicione itens acima...</p>";
 }
 
-function dragItem(ev, titulo, index) {
-    dragSource = { tipo: 'item', titulo, index };
-    ev.dataTransfer.setData("text/plain", "");
-}
-
-function dragBloco(ev, titulo) {
-    dragSource = { tipo: 'bloco', titulo, index: null };
-    ev.dataTransfer.setData("text/plain", "");
-}
-
-function handleDragOver(ev) {
-    ev.preventDefault();
-    ev.currentTarget.classList.add('drag-over-bloco');
-}
-
-function handleDragLeave(ev) {
-    ev.currentTarget.classList.remove('drag-over-bloco');
-}
+function dragItem(ev, titulo, index) { dragSource = { titulo, index }; }
+function handleDragOver(ev) { ev.preventDefault(); ev.currentTarget.classList.add('drag-over-bloco'); }
+function handleDragLeave(ev) { ev.currentTarget.classList.remove('drag-over-bloco'); }
 
 function handleDrop(ev, tituloDestino) {
     ev.preventDefault();
     ev.currentTarget.classList.remove('drag-over-bloco');
     if (!dragSource) return;
 
-    if (dragSource.tipo === 'item') {
-        const item = dados.get(dragSource.titulo).splice(dragSource.index, 1)[0];
-        if (dados.get(dragSource.titulo).length === 0) dados.delete(dragSource.titulo);
-        if (!dados.has(tituloDestino)) dados.set(tituloDestino, []);
-        dados.get(tituloDestino).push(item);
-    } 
-    else if (dragSource.tipo === 'bloco') {
-        const entries = Array.from(dados.entries());
-        const idxOrigem = entries.findIndex(e => e[0] === dragSource.titulo);
-        const idxDestino = entries.findIndex(e => e[0] === tituloDestino);
-        const [removido] = entries.splice(idxOrigem, 1);
-        entries.splice(idxDestino, 0, removido);
-        dados = new Map(entries);
-    }
+    const item = dados.get(dragSource.titulo).splice(dragSource.index, 1)[0];
+    if (dados.get(dragSource.titulo).length === 0) dados.delete(dragSource.titulo);
+    
+    if (!dados.has(tituloDestino)) dados.set(tituloDestino, []);
+    dados.get(tituloDestino).push(item);
+    
     dragSource = null;
     renderLista();
 }
 
 function excluirItem(titulo, index) {
-    if(confirm("Excluir?")) {
+    if(confirm("Excluir item?")) {
         dados.get(titulo).splice(index, 1);
         if(dados.get(titulo).length === 0) dados.delete(titulo);
         renderLista();
@@ -451,27 +455,19 @@ function excluirItem(titulo, index) {
 }
 
 function abrirModal(titulo, index) {
-    editandoInfo = { titulo, index };
     const item = dados.get(titulo)[index];
     document.getElementById("editDesc").value = item.descricao;
     document.getElementById("editSubs").value = item.subdescricoes.join(', ');
     document.getElementById("modalEdicao").style.display = "flex";
-    document.getElementById("btnSalvarModal").onclick = salvarEdicao;
+    document.getElementById("btnSalvarModal").onclick = () => {
+        item.descricao = document.getElementById("editDesc").value;
+        item.subdescricoes = document.getElementById("editSubs").value.split(',').map(x => x.trim()).filter(x => x);
+        renderLista();
+        fecharModal();
+    };
 }
 
 function fecharModal() { document.getElementById("modalEdicao").style.display = "none"; }
-
-function salvarEdicao() {
-    const d = document.getElementById("editDesc").value;
-    const s = document.getElementById("editSubs").value;
-    if (d) {
-        let item = dados.get(editandoInfo.titulo)[editandoInfo.index];
-        item.descricao = d;
-        item.subdescricoes = s.split(',').map(x => x.trim()).filter(x => x);
-        renderLista();
-        fecharModal();
-    }
-}
 
 function gerarTexto() {
     let dataVal = document.getElementById("data").value;
@@ -489,20 +485,12 @@ function gerarTexto() {
     document.getElementById("resultado").textContent = texto;
 }
 
-function mudarCorTema(c) { 
-    document.documentElement.style.setProperty('--primary-color', c);
-    localStorage.setItem('temaCor', c); 
-}
-
+function mudarCorTema(c) { document.documentElement.style.setProperty('--primary-color', c); localStorage.setItem('temaCor', c); }
 function toggleNightMode() { 
     document.body.classList.toggle('dark-mode'); 
     localStorage.setItem('nightMode', document.body.classList.contains('dark-mode') ? 'ativo' : 'inativo'); 
 }
-
-function copiarTexto() { 
-    navigator.clipboard.writeText(document.getElementById("resultado").textContent);
-    alert("Copiado!");
-}
+function copiarTexto() { navigator.clipboard.writeText(document.getElementById("resultado").textContent); alert("Copiado!"); }
 
 window.onload = function() { 
     document.getElementById("data").value = new Date().toLocaleDateString('sv-SE', {timeZone: 'America/Sao_Paulo'}); 
