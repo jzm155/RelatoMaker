@@ -1,261 +1,261 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerador de Relato Pro - V3</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Relato Pro - V3.1 (Agrupamento Ativo)</title>
 
-<style>
-:root {
-    --bg-body: #f4f6f8;
-    --bg-container: white;
-    --text-color: #333;
-    --item-bg: #f1f1f1;
-    --border-color: #ccc;
-    --group-bg: #fafafa;
-    --primary-color: #007bff;
-}
+    <style>
+        :root {
+            --bg-body: #f4f6f8;
+            --bg-container: white;
+            --text-color: #333;
+            --item-bg: #f1f1f1;
+            --border-color: #ccc;
+            --group-bg: #fafafa;
+            --primary-color: #007bff;
+        }
 
-body.dark-mode {
-    --bg-body: #121212;
-    --bg-container: #1e1e1e;
-    --text-color: #e0e0e0;
-    --item-bg: #2d2d2d;
-    --border-color: #444;
-    --group-bg: #252525;
-}
+        body.dark-mode {
+            --bg-body: #121212;
+            --bg-container: #1e1e1e;
+            --text-color: #e0e0e0;
+            --item-bg: #2d2d2d;
+            --border-color: #444;
+            --group-bg: #252525;
+        }
 
-body {
-    font-family: Arial, sans-serif;
-    background: var(--bg-body);
-    color: var(--text-color);
-    padding: 40px 20px;
-    margin: 0;
-    transition: 0.3s;
-}
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-color);
+            padding: 40px 20px;
+            margin: 0;
+            transition: 0.3s;
+        }
 
-.container {
-    max-width: 800px;
-    margin: auto;
-    background: var(--bg-container);
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: var(--bg-container);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
 
-.controles-topo {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    z-index: 1000;
-}
+        .controles-topo {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 1000;
+        }
 
-#btnNightMode {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    border: 1px solid var(--border-color);
-    background: var(--bg-container);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-}
+        #btnNightMode {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: var(--bg-container);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
 
-.seletor-cor {
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    overflow: hidden;
-}
+        .seletor-cor {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            overflow: hidden;
+        }
 
-.grupo-adicao {
-    border: 1px solid var(--border-color);
-    padding: 15px;
-    border-radius: 8px;
-    background: var(--group-bg);
-    margin-bottom: 20px;
-}
+        .grupo-adicao {
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 8px;
+            background: var(--group-bg);
+            margin-bottom: 20px;
+        }
 
-.titulo-container {
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px dashed var(--border-color);
-    position: relative;
-}
+        .titulo-container {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed var(--border-color);
+            position: relative;
+        }
 
-input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    background: var(--bg-container);
-    color: var(--text-color);
-    box-sizing: border-box;
-}
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--bg-container);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
 
-.input-emoji-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-#titulo { padding-right: 40px; }
-.btn-emoji-open {
-    position: absolute;
-    right: 5px;
-    top: 55%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 20px;
-    padding: 0;
-    z-index: 5;
-}
-.painel-emotes {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    width: 280px;
-    max-height: 200px;
-    overflow-y: auto;
-    background: var(--bg-container);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    z-index: 2000;
-    padding: 10px;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 5px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-.painel-emotes span {
-    cursor: pointer;
-    font-size: 20px;
-    text-align: center;
-    padding: 3px;
-    border-radius: 4px;
-}
-.painel-emotes span:hover { background: rgba(0,0,0,0.1); }
+        .input-emoji-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        #titulo { padding-right: 40px; }
+        .btn-emoji-open {
+            position: absolute;
+            right: 5px;
+            top: 55%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 0;
+            z-index: 5;
+        }
+        .painel-emotes {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 280px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            z-index: 2000;
+            padding: 10px;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .painel-emotes span {
+            cursor: pointer;
+            font-size: 20px;
+            text-align: center;
+            padding: 3px;
+            border-radius: 4px;
+        }
+        .painel-emotes span:hover { background: rgba(0,0,0,0.1); }
 
-button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    background: var(--primary-color);
-    color: white;
-    font-weight: bold;
-    transition: filter 0.2s;
-}
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            transition: filter 0.2s;
+        }
 
-button:hover { filter: brightness(0.9); }
+        button:hover { filter: brightness(0.9); }
 
-.item-bloco {
-    background: var(--item-bg);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border-left: 5px solid var(--primary-color);
-    position: relative;
-}
+        .item-bloco {
+            background: var(--item-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary-color);
+            position: relative;
+        }
 
-.cabecalho-bloco {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(0,0,0,0.05);
-    padding: 8px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-}
+        .cabecalho-bloco {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.05);
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
 
-.titulo-texto {
-    text-transform: uppercase;
-    font-size: 0.85em;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
+        .titulo-texto {
+            text-transform: uppercase;
+            font-size: 0.85em;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
 
-.controles-ordem-bloco {
-    display: flex;
-    gap: 4px;
-}
+        .controles-ordem-bloco {
+            display: flex;
+            gap: 4px;
+        }
 
-.btn-ordem {
-    background: #6c757d;
-    padding: 2px 8px;
-    font-size: 14px;
-}
+        .btn-ordem {
+            background: #6c757d;
+            padding: 2px 8px;
+            font-size: 14px;
+        }
 
-.linha-reordenavel {
-    background: var(--bg-container);
-    margin-top: 8px;
-    padding: 10px;
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: grab;
-    border: 1px solid transparent;
-}
+        .linha-reordenavel {
+            background: var(--bg-container);
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+            border: 1px solid transparent;
+        }
 
-.drag-over-bloco {
-    background: rgba(0, 123, 255, 0.15) !important;
-    outline: 2px dashed var(--primary-color);
-}
+        .drag-over-bloco {
+            background: rgba(0, 123, 255, 0.15) !important;
+            outline: 2px dashed var(--primary-color);
+        }
 
-.modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-}
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
 
-.modal-content {
-    background: var(--bg-container);
-    padding: 25px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
-}
+        .modal-content {
+            background: var(--bg-container);
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+        }
 
-.tag-sub {
-    display: inline-flex;
-    align-items: center;
-    background: var(--primary-color);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    margin: 2px;
-}
+        .tag-sub {
+            display: inline-flex;
+            align-items: center;
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin: 2px;
+        }
 
-.btn-acoes { display: flex; gap: 5px; }
-.btn-delete { background: #dc3545; padding: 4px 8px; font-size: 12px; }
-.btn-edit { background: #6c757d; padding: 4px 8px; font-size: 12px; }
+        .btn-acoes { display: flex; gap: 5px; }
+        .btn-delete { background: #dc3545; padding: 4px 8px; font-size: 12px; }
+        .btn-edit { background: #6c757d; padding: 4px 8px; font-size: 12px; }
 
-.output {
-    margin-top: 10px;
-    background: #111;
-    color: #0f0;
-    padding: 15px;
-    border-radius: 8px;
-    white-space: pre-wrap;
-    font-family: monospace;
-}
-</style>
+        .output {
+            margin-top: 10px;
+            background: #111;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
 </head>
 
 <body>
@@ -293,10 +293,10 @@ button:hover { filter: brightness(0.9); }
         </div>
         <div>
             <label>Descrição</label>
-            <input type="text" id="descricao">
+            <input type="text" id="descricao" placeholder="Descrição do item">
         </div>
         <div style="display:flex; gap:10px; margin-top:10px">
-            <input type="text" id="subInput" placeholder="Sub descrição (Enter)">
+            <input type="text" id="subInput" placeholder="Sub item(caso houver)">
             <button type="button" onclick="addTag()">+</button>
         </div>
         <div id="containerTags" style="margin-top:10px"></div>
@@ -305,7 +305,7 @@ button:hover { filter: brightness(0.9); }
 
     <div style="margin-top:20px">
         <h3>Estrutura do Relato</h3>
-        <p style="font-size: 0.8em; opacity: 0.7;">• Use as setas para mover seções.<br>• Arraste os itens para mover entre seções.</p>
+        <p style="font-size: 0.8em; opacity: 0.7;">• Itens com mesma descrição serão agrupados automaticamente.<br>• Use as setas para mover seções.</p>
         <div id="lista"></div>
     </div>
 
@@ -323,6 +323,7 @@ let subdescricoesTemporarias = [];
 let dragSource = null;
 const emojis = ["☀️","🌙","🍅","🏎️","🚙","🍪","👩‍⚕️","🌊","🥬","💸","💰","😀","😃","😄","😁","😆","😅","😂","🤣","😊","😉","😍","😘","😋","🤔","🤫","😐","🙄","😬","😔","😴","😎","🤓","🧐","😮","🥺","😢","😭","😱","😡","🤡","💩","👻","👍","👎","👏","🙏","💪","❤️","🔥","✨","⭐","⚡"];
 const painel = document.getElementById('painelEmotes');
+
 emojis.forEach(e => {
     const span = document.createElement('span');
     span.textContent = e;
@@ -363,10 +364,31 @@ function removeTag(i) { subdescricoesTemporarias.splice(i, 1); renderTags(); }
 function adicionarItem() {
     let titulo = document.getElementById("titulo").value.trim();
     let descricao = document.getElementById("descricao").value.trim();
+    
     if (!titulo || !descricao) return;
     
+    // Garante que a seção existe
     if (!dados.has(titulo)) dados.set(titulo, []);
-    dados.get(titulo).push({ descricao, subdescricoes: [...subdescricoesTemporarias] });
+    
+    let itensDaSecao = dados.get(titulo);
+    
+    // Lógica de AGRUPAMENTO: Procura se a descrição já existe nesta seção
+    let itemExistente = itensDaSecao.find(i => i.descricao.toLowerCase() === descricao.toLowerCase());
+
+    if (itemExistente) {
+        // Se já existe, apenas anexa as subdescrições novas
+        subdescricoesTemporarias.forEach(sub => {
+            if (!itemExistente.subdescricoes.includes(sub)) {
+                itemExistente.subdescricoes.push(sub);
+            }
+        });
+    } else {
+        // Se é novo, adiciona normalmente
+        itensDaSecao.push({ 
+            descricao, 
+            subdescricoes: [...subdescricoesTemporarias] 
+        });
+    }
     
     subdescricoesTemporarias = [];
     renderTags();
@@ -433,11 +455,31 @@ function handleDrop(ev, tituloDestino) {
     ev.currentTarget.classList.remove('drag-over-bloco');
     if (!dragSource) return;
 
-    const item = dados.get(dragSource.titulo).splice(dragSource.index, 1)[0];
-    if (dados.get(dragSource.titulo).length === 0) dados.delete(dragSource.titulo);
-    
+    const sourceItens = dados.get(dragSource.titulo);
+    const itemSendoMovido = sourceItens[dragSource.index];
+
+    // Se estiver movendo para o mesmo título, não precisa agrupar, apenas reordenar (opcional)
+    if (dragSource.titulo === tituloDestino) {
+        // Logica simples de reordenação se necessário, aqui apenas mantemos como está
+        dragSource = null;
+        return;
+    }
+
+    // Ao mover para outra seção, verifica se lá já existe a mesma descrição para agrupar
     if (!dados.has(tituloDestino)) dados.set(tituloDestino, []);
-    dados.get(tituloDestino).push(item);
+    let destinoItens = dados.get(tituloDestino);
+    let duplicataDestino = destinoItens.find(i => i.descricao.toLowerCase() === itemSendoMovido.descricao.toLowerCase());
+
+    if (duplicataDestino) {
+        itemSendoMovido.subdescricoes.forEach(s => {
+            if (!duplicataDestino.subdescricoes.includes(s)) duplicataDestino.subdescricoes.push(s);
+        });
+        sourceItens.splice(dragSource.index, 1);
+    } else {
+        destinoItens.push(sourceItens.splice(dragSource.index, 1)[0]);
+    }
+
+    if (sourceItens.length === 0) dados.delete(dragSource.titulo);
     
     dragSource = null;
     renderLista();
