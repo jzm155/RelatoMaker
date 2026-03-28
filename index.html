@@ -264,7 +264,8 @@
     <div class="modal-content">
         <h3>Editar Item</h3>
         <input type="text" id="editDesc" placeholder="Descrição">
-        <input type="text" id="editSubs" placeholder="Subdescrições (vírgula)" style="margin-top:10px">
+        <input type="text" id="editLink" placeholder="Link do Item (opcional)" style="margin-top:10px">
+        <input type="text" id="editSubs" placeholder="Subdescrições (Ex: Texto|link, Texto2)" style="margin-top:10px">
         <div style="display:flex; gap:10px; margin-top:20px">
             <button style="background:#6c757d; flex:1" onclick="fecharModal()">Cancelar</button>
             <button style="flex:2" id="btnSalvarModal">Salvar</button>
@@ -278,7 +279,12 @@
 </div>
 
 <div class="container">
-    <h2>Gerador de Relato</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">Gerador de Relato</h2>
+        <label style="font-size: 0.85em; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+            <input type="checkbox" id="limparAoGerar" checked style="width: auto; margin: 0;" onchange="salvarPreferenciaLimpeza()"> Limpar Dados ao Gerar Relato
+        </label>
+    </div>
 
     <input type="date" id="data" style="margin-bottom: 20px;">
 
@@ -293,10 +299,14 @@
         </div>
         <div>
             <label>Descrição</label>
-            <input type="text" id="descricao" placeholder="Descrição do item" oninput="salvarProgresso()">
+            <div style="display:flex; gap:10px">
+                <input type="text" id="descricao" placeholder="Descrição do item" oninput="salvarProgresso()" style="flex: 2;">
+                <input type="text" id="linkItem" placeholder="Link (opcional)" oninput="salvarProgresso()" style="flex: 1;">
+            </div>
         </div>
         <div style="display:flex; gap:10px; margin-top:10px">
-            <input type="text" id="subInput" placeholder="Sub item(caso houver)">
+            <input type="text" id="subInput" placeholder="Sub item" style="flex: 2;">
+            <input type="text" id="subLinkInput" placeholder="Link sub (opcional)" style="flex: 1;">
             <button type="button" onclick="addTag()">+</button>
         </div>
         <div id="containerTags" style="margin-top:10px"></div>
@@ -338,11 +348,16 @@ emojis.forEach(e => {
     painel.appendChild(span);
 });
 
+function salvarPreferenciaLimpeza() {
+    localStorage.setItem('relato_pref_limpar', document.getElementById('limparAoGerar').checked);
+}
+
 function salvarProgresso() {
     const estado = {
         data: document.getElementById('data').value,
         titulo: document.getElementById('titulo').value,
         descricao: document.getElementById('descricao').value,
+        linkItem: document.getElementById('linkItem').value,
         subdescricoesTemporarias: subdescricoesTemporarias,
         dados: Array.from(dados.entries()) // Converte Map para Array para JSON
     };
@@ -358,6 +373,7 @@ function carregarProgresso() {
         if (estado.data) document.getElementById('data').value = estado.data;
         document.getElementById('titulo').value = estado.titulo || "";
         document.getElementById('descricao').value = estado.descricao || "";
+        if (document.getElementById('linkItem')) document.getElementById('linkItem').value = estado.linkItem || "";
         
         // Restaura listas e Map
         subdescricoesTemporarias = estado.subdescricoesTemporarias || [];
@@ -391,13 +407,15 @@ document.getElementById('subInput').addEventListener('keydown', e => {
 
 function addTag() {
     let val = document.getElementById('subInput').value.trim();
-    if (val) { subdescricoesTemporarias.push(val); renderTags(); salvarProgresso(); }
+    let link = document.getElementById('subLinkInput').value.trim();
+    if (val) { subdescricoesTemporarias.push({ texto: val, link: link }); renderTags(); salvarProgresso(); }
     document.getElementById('subInput').value = "";
+    document.getElementById('subLinkInput').value = "";
 }
 
 function renderTags() {
     document.getElementById('containerTags').innerHTML = subdescricoesTemporarias.map((s, i) => 
-        `<span class="tag-sub">${s} <span onclick="removeTag(${i})" style="cursor:pointer">&times;</span></span>`
+        `<span class="tag-sub">${s.texto || s}${s.link ? ' 🔗' : ''} <span onclick="removeTag(${i})" style="cursor:pointer">&times;</span></span>`
     ).join('');
 }
 
@@ -406,6 +424,7 @@ function removeTag(i) { subdescricoesTemporarias.splice(i, 1); renderTags(); sal
 function adicionarItem() {
     let titulo = document.getElementById("titulo").value.trim();
     let descricao = document.getElementById("descricao").value.trim();
+    let link = document.getElementById("linkItem").value.trim();
     
     if (!titulo || !descricao) return;
     
@@ -420,14 +439,16 @@ function adicionarItem() {
     if (itemExistente) {
         // Se já existe, apenas anexa as subdescrições novas
         subdescricoesTemporarias.forEach(sub => {
-            if (!itemExistente.subdescricoes.includes(sub)) {
+            const sTexto = sub.texto || sub;
+            if (!itemExistente.subdescricoes.some(exist => (exist.texto || exist) === sTexto)) {
                 itemExistente.subdescricoes.push(sub);
             }
         });
     } else {
         // Se é novo, adiciona normalmente
         itensDaSecao.push({ 
-            descricao, 
+            descricao,
+            link,
             subdescricoes: [...subdescricoesTemporarias] 
         });
     }
@@ -435,6 +456,7 @@ function adicionarItem() {
     subdescricoesTemporarias = [];
     renderTags();
     document.getElementById("descricao").value = "";
+    document.getElementById("linkItem").value = "";
     renderLista();
     salvarProgresso();
 }
@@ -476,8 +498,14 @@ function renderLista() {
             ${itens.map((i, index) => `
                 <div class="linha-reordenavel" draggable="true" ondragstart="dragItem(event, '${titulo}', ${index})">
                     <div style="pointer-events:none">
-                        - ${i.descricao}
-                        ${i.subdescricoes.map(s => `<div style="margin-left:20px; font-size:0.85em; opacity:0.7">↳ ${s}</div>`).join('')}
+                        - ${i.link ? `<span style="color:var(--primary-color)">${i.descricao} 🔗</span>` : i.descricao}
+                        ${i.subdescricoes.map(s => {
+                            const texto = s.texto || s;
+                            const link = s.link || "";
+                            return `<div style="margin-left:20px; font-size:0.85em; opacity:0.7">
+                                ↳ ${link ? `<span style="color:var(--primary-color)">${texto} 🔗</span>` : texto}
+                            </div>`;
+                        }).join('')}
                     </div>
                     <div class="btn-acoes">
                         <button class="btn-edit" onclick="abrirModal('${titulo}', ${index})">✎</button>
@@ -516,7 +544,9 @@ function handleDrop(ev, tituloDestino) {
 
     if (duplicataDestino) {
         itemSendoMovido.subdescricoes.forEach(s => {
-            if (!duplicataDestino.subdescricoes.includes(s)) duplicataDestino.subdescricoes.push(s);
+            const sTexto = s.texto || s;
+            const sLink = s.link || "";
+            if (!duplicataDestino.subdescricoes.some(d => (d.texto || d) === sTexto && (d.link || "") === sLink)) duplicataDestino.subdescricoes.push(s);
         });
         sourceItens.splice(dragSource.index, 1);
     } else {
@@ -542,11 +572,22 @@ function excluirItem(titulo, index) {
 function abrirModal(titulo, index) {
     const item = dados.get(titulo)[index];
     document.getElementById("editDesc").value = item.descricao;
-    document.getElementById("editSubs").value = item.subdescricoes.join(', ');
+    document.getElementById("editLink").value = item.link || "";
+    document.getElementById("editSubs").value = item.subdescricoes.map(s => s.link ? `${s.texto}|${s.link}` : (s.texto || s)).join(', ');
+    
     document.getElementById("modalEdicao").style.display = "flex";
     document.getElementById("btnSalvarModal").onclick = () => {
         item.descricao = document.getElementById("editDesc").value;
-        item.subdescricoes = document.getElementById("editSubs").value.split(',').map(x => x.trim()).filter(x => x);
+        item.link = document.getElementById("editLink").value;
+        item.subdescricoes = document.getElementById("editSubs").value.split(',').map(x => {
+            const part = x.trim();
+            if (!part) return null;
+            if (part.includes('|')) {
+                const [t, l] = part.split('|');
+                return { texto: t.trim(), link: l.trim() };
+            }
+            return { texto: part, link: "" };
+        }).filter(x => x);
         renderLista();
         salvarProgresso();
         fecharModal();
@@ -563,22 +604,33 @@ function gerarTexto() {
     dados.forEach((itens, titulo) => {
         texto += `**${titulo}**\n`;
         itens.forEach(i => {
-            texto += ` - ${i.descricao}\n`;
-            i.subdescricoes.forEach(s => texto += `   - ${s}\n`);
+            const descFormatada = i.link 
+  ? `[${i.descricao}](${i.link})` 
+  : i.descricao;
+            texto += ` - ${descFormatada}\n`;
+            i.subdescricoes.forEach(s => {
+                const sTexto = s.texto || s;
+                const subFormatada = s.link ? `${sTexto}` : sTexto;
+                texto += `   - ${subFormatada}\n`;
+            });
         });
         texto += "\n";
     });
     document.getElementById("resultado").textContent = texto;
 
-    // Limpa o estado interno e a interface após gerar o texto
-    dados.clear();
-    subdescricoesTemporarias = [];
-    document.getElementById("titulo").value = "";
-    document.getElementById("descricao").value = "";
-    document.getElementById("subInput").value = "";
-    renderLista();
-    renderTags();
-    limparProgresso();
+    if (document.getElementById("limparAoGerar").checked) {
+        // Limpa o estado interno e a interface após gerar o texto
+        dados.clear();
+        subdescricoesTemporarias = [];
+        document.getElementById("titulo").value = "";
+        document.getElementById("descricao").value = "";
+        document.getElementById("linkItem").value = "";
+        document.getElementById("subInput").value = "";
+        document.getElementById("subLinkInput").value = "";
+        renderLista();
+        renderTags();
+        limparProgresso();
+    }
 }
 
 function limparTudo() {
@@ -587,7 +639,9 @@ function limparTudo() {
         subdescricoesTemporarias = [];
         document.getElementById("titulo").value = "";
         document.getElementById("descricao").value = "";
+        document.getElementById("linkItem").value = "";
         document.getElementById("subInput").value = "";
+        document.getElementById("subLinkInput").value = "";
         document.getElementById("resultado").textContent = "";
         renderLista();
         renderTags();
@@ -606,6 +660,10 @@ window.onload = function() {
     document.getElementById("data").value = new Date().toLocaleDateString('sv-SE', {timeZone: 'America/Sao_Paulo'}); 
     mudarCorTema(localStorage.getItem('temaCor') || '#007bff'); 
     if(localStorage.getItem('nightMode') === 'ativo') document.body.classList.add('dark-mode');
+    
+    const prefLimpar = localStorage.getItem('relato_pref_limpar');
+    if (prefLimpar !== null) document.getElementById("limparAoGerar").checked = (prefLimpar === 'true');
+
     carregarProgresso();
 }
 </script>
