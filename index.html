@@ -286,14 +286,14 @@
         <div class="titulo-container">
             <label>Título da Seção</label>
             <div class="input-emoji-wrapper">
-                <input type="text" id="titulo" placeholder="Ex: Atividades do Dia">
+                <input type="text" id="titulo" placeholder="Ex: Atividades do Dia" oninput="salvarProgresso()">
                 <button type="button" class="btn-emoji-open" onclick="toggleEmotes()">😀</button>
                 <div id="painelEmotes" class="painel-emotes"></div>
             </div>
         </div>
         <div>
             <label>Descrição</label>
-            <input type="text" id="descricao" placeholder="Descrição do item">
+            <input type="text" id="descricao" placeholder="Descrição do item" oninput="salvarProgresso()">
         </div>
         <div style="display:flex; gap:10px; margin-top:10px">
             <input type="text" id="subInput" placeholder="Sub item(caso houver)">
@@ -309,7 +309,10 @@
         <div id="lista"></div>
     </div>
 
-    <button onclick="gerarTexto()" style="width:100%; margin: 20px 0;">Gerar Texto Final</button>
+    <div style="display: flex; gap: 10px; margin: 20px 0;">
+        <button onclick="gerarTexto()" style="flex: 3;">Gerar Texto Final</button>
+        <button onclick="limparTudo()" style="flex: 1; background: #6c757d;">Limpar</button>
+    </div>
     <div style="display:flex; justify-content: space-between; align-items:center">
         <h3>Resultado</h3>
         <button onclick="copiarTexto()">Copiar</button>
@@ -335,6 +338,45 @@ emojis.forEach(e => {
     painel.appendChild(span);
 });
 
+function salvarProgresso() {
+    const estado = {
+        data: document.getElementById('data').value,
+        titulo: document.getElementById('titulo').value,
+        descricao: document.getElementById('descricao').value,
+        subdescricoesTemporarias: subdescricoesTemporarias,
+        dados: Array.from(dados.entries()) // Converte Map para Array para JSON
+    };
+    localStorage.setItem('relato_pro_backup', JSON.stringify(estado));
+}
+
+function carregarProgresso() {
+    const salvo = localStorage.getItem('relato_pro_backup');
+    if (salvo) {
+        const estado = JSON.parse(salvo);
+        
+        // Restaura campos simples
+        if (estado.data) document.getElementById('data').value = estado.data;
+        document.getElementById('titulo').value = estado.titulo || "";
+        document.getElementById('descricao').value = estado.descricao || "";
+        
+        // Restaura listas e Map
+        subdescricoesTemporarias = estado.subdescricoesTemporarias || [];
+        if (estado.dados) {
+            dados = new Map(estado.dados);
+        }
+        
+        renderTags();
+        renderLista();
+    }
+}
+
+function limparProgresso() {
+    localStorage.removeItem('relato_pro_backup');
+}
+
+// Adiciona listener para a data
+document.getElementById('data').onchange = salvarProgresso;
+
 function toggleEmotes() {
     painel.style.display = painel.style.display === 'grid' ? 'none' : 'grid';
 }
@@ -349,7 +391,7 @@ document.getElementById('subInput').addEventListener('keydown', e => {
 
 function addTag() {
     let val = document.getElementById('subInput').value.trim();
-    if (val) { subdescricoesTemporarias.push(val); renderTags(); }
+    if (val) { subdescricoesTemporarias.push(val); renderTags(); salvarProgresso(); }
     document.getElementById('subInput').value = "";
 }
 
@@ -359,7 +401,7 @@ function renderTags() {
     ).join('');
 }
 
-function removeTag(i) { subdescricoesTemporarias.splice(i, 1); renderTags(); }
+function removeTag(i) { subdescricoesTemporarias.splice(i, 1); renderTags(); salvarProgresso(); }
 
 function adicionarItem() {
     let titulo = document.getElementById("titulo").value.trim();
@@ -394,6 +436,7 @@ function adicionarItem() {
     renderTags();
     document.getElementById("descricao").value = "";
     renderLista();
+    salvarProgresso();
 }
 
 function moverBloco(titulo, direcao) {
@@ -407,6 +450,7 @@ function moverBloco(titulo, direcao) {
         entries[novoIndex] = temp;
         dados = new Map(entries);
         renderLista();
+        salvarProgresso();
     }
 }
 
@@ -483,6 +527,7 @@ function handleDrop(ev, tituloDestino) {
     
     dragSource = null;
     renderLista();
+    salvarProgresso();
 }
 
 function excluirItem(titulo, index) {
@@ -490,6 +535,7 @@ function excluirItem(titulo, index) {
         dados.get(titulo).splice(index, 1);
         if(dados.get(titulo).length === 0) dados.delete(titulo);
         renderLista();
+        salvarProgresso();
     }
 }
 
@@ -502,6 +548,7 @@ function abrirModal(titulo, index) {
         item.descricao = document.getElementById("editDesc").value;
         item.subdescricoes = document.getElementById("editSubs").value.split(',').map(x => x.trim()).filter(x => x);
         renderLista();
+        salvarProgresso();
         fecharModal();
     };
 }
@@ -522,6 +569,30 @@ function gerarTexto() {
         texto += "\n";
     });
     document.getElementById("resultado").textContent = texto;
+
+    // Limpa o estado interno e a interface após gerar o texto
+    dados.clear();
+    subdescricoesTemporarias = [];
+    document.getElementById("titulo").value = "";
+    document.getElementById("descricao").value = "";
+    document.getElementById("subInput").value = "";
+    renderLista();
+    renderTags();
+    limparProgresso();
+}
+
+function limparTudo() {
+    if (confirm("Tem certeza que deseja limpar todo o formulário e a lista de itens?")) {
+        dados.clear();
+        subdescricoesTemporarias = [];
+        document.getElementById("titulo").value = "";
+        document.getElementById("descricao").value = "";
+        document.getElementById("subInput").value = "";
+        document.getElementById("resultado").textContent = "";
+        renderLista();
+        renderTags();
+        limparProgresso();
+    }
 }
 
 function mudarCorTema(c) { document.documentElement.style.setProperty('--primary-color', c); localStorage.setItem('temaCor', c); }
@@ -535,6 +606,7 @@ window.onload = function() {
     document.getElementById("data").value = new Date().toLocaleDateString('sv-SE', {timeZone: 'America/Sao_Paulo'}); 
     mudarCorTema(localStorage.getItem('temaCor') || '#007bff'); 
     if(localStorage.getItem('nightMode') === 'ativo') document.body.classList.add('dark-mode');
+    carregarProgresso();
 }
 </script>
 </body>
