@@ -260,6 +260,14 @@
 
 <body>
 
+<div class="modal-overlay" id="modalAviso">
+    <div class="modal-content">
+        <h3 id="avisoTitulo">Aviso</h3>
+        <p id="avisoMensagem" style="margin: 15px 0; line-height: 1.4;"></p>
+        <div style="display:flex; gap:10px; margin-top:20px" id="avisoBotoes"></div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="modalEdicao">
     <div class="modal-content">
         <h3>Editar Item</h3>
@@ -561,12 +569,12 @@ function handleDrop(ev, tituloDestino) {
 }
 
 function excluirItem(titulo, index) {
-    if(confirm("Excluir item?")) {
+    mostrarAviso("Tem certeza que deseja excluir este item?", "Confirmação", "confirmacao", () => {
         dados.get(titulo).splice(index, 1);
         if(dados.get(titulo).length === 0) dados.delete(titulo);
         renderLista();
         salvarProgresso();
-    }
+    });
 }
 
 function abrirModal(titulo, index) {
@@ -596,9 +604,38 @@ function abrirModal(titulo, index) {
 
 function fecharModal() { document.getElementById("modalEdicao").style.display = "none"; }
 
+function mostrarAviso(mensagem, titulo = "Aviso", tipo = "alerta", callback = null) {
+    const modal = document.getElementById('modalAviso');
+    document.getElementById('avisoTitulo').textContent = titulo;
+    document.getElementById('avisoMensagem').textContent = mensagem;
+    const containerBotoes = document.getElementById('avisoBotoes');
+    
+    containerBotoes.innerHTML = '';
+    
+    if (tipo === 'confirmacao') {
+        const btnCancelar = document.createElement('button');
+        btnCancelar.textContent = 'Cancelar';
+        btnCancelar.style.background = '#6c757d';
+        btnCancelar.style.flex = '1';
+        btnCancelar.onclick = () => { modal.style.display = 'none'; };
+        containerBotoes.appendChild(btnCancelar);
+    }
+    
+    const btnOk = document.createElement('button');
+    btnOk.textContent = 'OK';
+    btnOk.style.flex = '1';
+    btnOk.onclick = () => {
+        modal.style.display = 'none';
+        if (callback) callback();
+    };
+    containerBotoes.appendChild(btnOk);
+    
+    modal.style.display = 'flex';
+}
+
 function gerarTexto() {
     let dataVal = document.getElementById("data").value;
-    if (!dataVal) return alert("Selecione a data");
+    if (!dataVal) { mostrarAviso("Por favor, selecione a data do relato."); return; }
     let p = dataVal.split("-");
     let texto = `**Relato - ${p[2]}/${p[1]}/${p[0]}**\n\n`;
     dados.forEach((itens, titulo) => {
@@ -634,7 +671,7 @@ function gerarTexto() {
 }
 
 function limparTudo() {
-    if (confirm("Tem certeza que deseja limpar todo o formulário e a lista de itens?")) {
+    mostrarAviso("Tem certeza que deseja limpar todo o formulário e a lista de itens?", "Confirmação", "confirmacao", () => {
         dados.clear();
         subdescricoesTemporarias = [];
         document.getElementById("titulo").value = "";
@@ -646,7 +683,7 @@ function limparTudo() {
         renderLista();
         renderTags();
         limparProgresso();
-    }
+    });
 }
 
 function mudarCorTema(c) { document.documentElement.style.setProperty('--primary-color', c); localStorage.setItem('temaCor', c); }
@@ -654,10 +691,13 @@ function toggleNightMode() {
     document.body.classList.toggle('dark-mode'); 
     localStorage.setItem('nightMode', document.body.classList.contains('dark-mode') ? 'ativo' : 'inativo'); 
 }
-function copiarTexto() { navigator.clipboard.writeText(document.getElementById("resultado").textContent); alert("Copiado!"); }
+function copiarTexto() { 
+    navigator.clipboard.writeText(document.getElementById("resultado").textContent); 
+    mostrarAviso("Relato copiado com sucesso!", "Sucesso"); 
+}
 
 window.onload = function() { 
-    document.getElementById("data").value = new Date().toLocaleDateString('sv-SE', {timeZone: 'America/Sao_Paulo'}); 
+    document.getElementById("data").value = new Date().toLocaleDateString('sv-SE');
     mudarCorTema(localStorage.getItem('temaCor') || '#007bff'); 
     if(localStorage.getItem('nightMode') === 'ativo') document.body.classList.add('dark-mode');
     
