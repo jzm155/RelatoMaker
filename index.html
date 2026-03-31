@@ -287,11 +287,8 @@
 </div>
 
 <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
         <h2 style="margin: 0;">Gerador de Relato</h2>
-        <label style="font-size: 0.85em; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-            <input type="checkbox" id="limparAoGerar" checked style="width: auto; margin: 0;" onchange="salvarPreferenciaLimpeza()"> Limpar Dados ao Gerar Relato
-        </label>
     </div>
 
     <input type="date" id="data" style="margin-bottom: 20px;">
@@ -327,6 +324,9 @@
         <div id="lista"></div>
     </div>
 
+    <label style="font-size: 0.85em; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
+        <input type="checkbox" id="limparAoGerar" checked style="width: auto; margin: 0;" onchange="salvarPreferenciaLimpeza()"> Limpar Dados ao Gerar Relato
+    </label>
     <div style="display: flex; gap: 10px; margin: 20px 0;">
         <button onclick="gerarTexto()" style="flex: 3;">Gerar Texto Final</button>
         <button onclick="limparTudo()" style="flex: 1; background: #6c757d;">Limpar</button>
@@ -647,7 +647,7 @@ function gerarTexto() {
             texto += ` - ${descFormatada}\n`;
             i.subdescricoes.forEach(s => {
                 const sTexto = s.texto || s;
-                const subFormatada = s.link ? `${sTexto}` : sTexto;
+                const subFormatada = s.link ? `[${sTexto}](${s.link})` : sTexto;
                 texto += `   - ${subFormatada}\n`;
             });
         });
